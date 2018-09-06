@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# ignore all png files because they are most likely rendered files that will be overwritten
+*.png
+
 # User-specific files
 *.suo
 *.user
