@@ -40,19 +40,19 @@ type MandelbrotRenderer (windowWidth:int, windowHeight:int, numericRange:Complex
     member this.PixelSize = pixelSize
 
     member this.DoesPixelEscape (pixelLocation:PixelLocation) (currentIteration:int) =
-        let rec CalculateIteration (originalPoint:ComplexPoint) (currentPoint:ComplexPoint) (currentIteration:int) =
+        let rec CalculateIteration (currentPointZ:ComplexPoint) (originalPointC:ComplexPoint) (currentIteration:int) =
             if currentIteration = maxIterations then 
                 maxIterations
-            else if originalPoint.Magnitude > 2.0 then 
+            else if currentPointZ.Magnitude > 2.0 then 
                 currentIteration
             else
-                let sqr = Complex.Multiply(currentPoint, currentPoint)
-                let newPoint = Complex.Add(sqr, originalPoint)
-                CalculateIteration originalPoint newPoint (currentIteration + 1)
+                let sqrZ = Complex.Multiply(currentPointZ, currentPointZ)
+                let newPointZ = Complex.Add(sqrZ, originalPointC)
+                CalculateIteration newPointZ originalPointC (currentIteration + 1)
 
 
         let ComplexPixel = pixelLocation.ToComplex this.NumericRange this.PixelSize
-        let Iteration = CalculateIteration ComplexPixel ComplexPixel 0
+        let Iteration = CalculateIteration ComplexPoint.Zero ComplexPixel 0
 
         let InSet = Iteration = maxIterations
         not InSet
@@ -71,8 +71,8 @@ type MandelbrotRenderer (windowWidth:int, windowHeight:int, numericRange:Complex
 
 [<EntryPoint>]
 let main argv =
-    let FullRange = ComplexRange(new ComplexPoint(-5.0, -5.0), new ComplexPoint(5.0, 5.0))
-    let MandelbrotRenderer = new MandelbrotRenderer(2400, 1800, FullRange, 50)
+    let FullRange = ComplexRange(new ComplexPoint(-2.5, -1.0), new ComplexPoint(1.0, 1.0))
+    let MandelbrotRenderer = new MandelbrotRenderer(3500, 2000, FullRange, 500)
 
     printfn "{FullRange: %s}" FullRange.ToString
     printfn "{MandelbrotRenderer: %s, PixelSize: %f}" MandelbrotRenderer.ToString MandelbrotRenderer.PixelSize
