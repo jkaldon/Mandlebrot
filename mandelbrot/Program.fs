@@ -34,7 +34,12 @@ type MandelbrotConfig (windowWidth:int, windowHeight:int, numericRange:ComplexRa
     member this.MaxIterations = maxIterations
     member this.ToString = sprintf "{WindowHeight: %i, WindowWidth: %i, NumericRange: %s}" windowHeight windowWidth numericRange.ToString
 
-let DoesPixelEscape (mandelbrotConfig:MandelbrotConfig) (complexPoint:ComplexPoint) (currentIteration:int) =
+type PixelInfo (escapeIteration:int, inSet:Boolean, color:Color)=
+    member this.EscapeIteration = escapeIteration
+    member this.InSet = inSet
+    member this.Color=color
+
+let GetPixelInfo (mandelbrotConfig:MandelbrotConfig) (complexPoint:ComplexPoint) (currentIteration:int) =
     let rec CalculateIteration (currentPointZ:ComplexPoint) (originalPointC:ComplexPoint) (currentIteration:int) =
         if currentIteration = mandelbrotConfig.MaxIterations then 
             currentIteration
@@ -45,21 +50,22 @@ let DoesPixelEscape (mandelbrotConfig:MandelbrotConfig) (complexPoint:ComplexPoi
             let newPointZ = Complex.Add(sqrZ, originalPointC)
             CalculateIteration newPointZ originalPointC (currentIteration + 1)
 
-
     let Iteration = CalculateIteration ComplexPoint.Zero complexPoint 0
-
     let InSet = Iteration = mandelbrotConfig.MaxIterations
-    not InSet
+    let color = 
+        if(InSet) then Color.Black
+        else
+            let cvalue = Iteration % 255
+            Color.FromArgb(cvalue, cvalue, cvalue)
+    new PixelInfo(Iteration, InSet, color)
 
 let RenderMandelbrot (mandelbrotConfig:MandelbrotConfig) =
     let image = new Bitmap(mandelbrotConfig.WindowWidth, mandelbrotConfig.WindowHeight)
 
     let setPixel x y =
         let complexPoint = getComplexPoint x y mandelbrotConfig.NumericRange mandelbrotConfig.PixelSize
-        if (DoesPixelEscape mandelbrotConfig complexPoint 0) then
-            image.SetPixel(x, y, Color.White)
-        else
-            image.SetPixel(x, y, Color.Black)
+        let pixelInfo = GetPixelInfo mandelbrotConfig complexPoint 0
+        image.SetPixel(x, y, pixelInfo.Color)
 
     let setPixelRow y = async { 
         for x:int in 0..(mandelbrotConfig.WindowWidth - 1) do
@@ -78,7 +84,7 @@ let RenderMandelbrot (mandelbrotConfig:MandelbrotConfig) =
 [<EntryPoint>]
 let main argv =
     let fullRange = ComplexRange(new ComplexPoint(-2.5, -1.0), new ComplexPoint(1.0, 1.0))
-    let mandelbrotConfig = new MandelbrotConfig(14000, 8000, fullRange, 100)
+    let mandelbrotConfig = new MandelbrotConfig(14000, 8000, fullRange, 200)
 
     printfn "{FullRange: %s}" fullRange.ToString
     printfn "{MandelbrotRenderer: %s, PixelSize: %f}" mandelbrotConfig.ToString mandelbrotConfig.PixelSize
