@@ -55,7 +55,9 @@ let GetPixelInfo (mandelbrotConfig:MandelbrotConfig) (complexPoint:ComplexPoint)
     let color = 
         if(InSet) then Color.Black
         else
-            let cvalue = Iteration % 255
+            let maxCValue=200.0
+            let IterationPercent = (float Iteration) / (float mandelbrotConfig.MaxIterations) 
+            let cvalue = int (IterationPercent * maxCValue)
             Color.FromArgb(cvalue, cvalue, cvalue)
     new PixelInfo(Iteration, InSet, color)
 
@@ -84,7 +86,7 @@ let RenderMandelbrot (mandelbrotConfig:MandelbrotConfig) =
 [<EntryPoint>]
 let main argv =
     let fullRange = ComplexRange(new ComplexPoint(-2.5, -1.0), new ComplexPoint(1.0, 1.0))
-    let mandelbrotConfig = new MandelbrotConfig(14000, 8000, fullRange, 200)
+    let mandelbrotConfig = new MandelbrotConfig(28000, 16000, fullRange, 1000)
 
     printfn "{FullRange: %s}" fullRange.ToString
     printfn "{MandelbrotRenderer: %s, PixelSize: %f}" mandelbrotConfig.ToString mandelbrotConfig.PixelSize
