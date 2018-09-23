@@ -51,27 +51,40 @@ let DoesPixelEscape (mandelbrotConfig:MandelbrotConfig) (complexPoint:ComplexPoi
     let InSet = Iteration = mandelbrotConfig.MaxIterations
     not InSet
 
-let RenderMandelbrot (mandebrotConfig:MandelbrotConfig)= 
-    let image = new Bitmap(mandebrotConfig.WindowWidth, mandebrotConfig.WindowHeight)
-    for x:int in 0..(mandebrotConfig.WindowWidth - 1) do
-        for y:int in 0..(mandebrotConfig.WindowHeight - 1) do
-            let complexPoint = getComplexPoint x y mandebrotConfig.NumericRange mandebrotConfig.PixelSize
-            if (DoesPixelEscape mandebrotConfig complexPoint 0) then
-                image.SetPixel(x, y, Color.White)
-            else
-                image.SetPixel(x, y, Color.Black)
-    image
+let RenderMandelbrot (mandelbrotConfig:MandelbrotConfig) =
+    let image = new Bitmap(mandelbrotConfig.WindowWidth, mandelbrotConfig.WindowHeight)
 
+    let setPixel x y =
+        let complexPoint = getComplexPoint x y mandelbrotConfig.NumericRange mandelbrotConfig.PixelSize
+        if (DoesPixelEscape mandelbrotConfig complexPoint 0) then
+            image.SetPixel(x, y, Color.White)
+        else
+            image.SetPixel(x, y, Color.Black)
+
+    let setPixelRow y = async { 
+        for x:int in 0..(mandelbrotConfig.WindowWidth - 1) do
+            setPixel x y
+    }
+
+    [0..(mandelbrotConfig.WindowHeight - 1)] 
+        |> List.map setPixelRow
+        |> Async.Parallel
+        |> Async.RunSynchronously 
+        |> ignore
+
+    image
+        
 
 [<EntryPoint>]
 let main argv =
     let fullRange = ComplexRange(new ComplexPoint(-2.5, -1.0), new ComplexPoint(1.0, 1.0))
-    let mandelbrotConfig = new MandelbrotConfig(3500, 2000, fullRange, 500)
+    let mandelbrotConfig = new MandelbrotConfig(14000, 8000, fullRange, 100)
 
     printfn "{FullRange: %s}" fullRange.ToString
     printfn "{MandelbrotRenderer: %s, PixelSize: %f}" mandelbrotConfig.ToString mandelbrotConfig.PixelSize
 
-    (RenderMandelbrot mandelbrotConfig).Save(Path.Combine(__SOURCE_DIRECTORY__, "rendered.png"))
+    let image = RenderMandelbrot mandelbrotConfig
+    image.Save(Path.Combine(__SOURCE_DIRECTORY__, "rendered.png"))
 
     0 // return an integer exit code
 
