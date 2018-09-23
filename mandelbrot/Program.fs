@@ -40,15 +40,21 @@ type PixelInfo (escapeIteration:int, inSet:Boolean, color:Color)=
     member this.Color=color
 
 let GetPixelInfo (mandelbrotConfig:MandelbrotConfig) (complexPoint:ComplexPoint) (currentIteration:int) =
+    let previousHashes = new System.Collections.Generic.HashSet<int>(100)
+
     let rec CalculateIteration (currentPointZ:ComplexPoint) (originalPointC:ComplexPoint) (currentIteration:int) =
         if currentIteration = mandelbrotConfig.MaxIterations then 
             currentIteration
         else if currentPointZ.Magnitude > 2.0 then 
             currentIteration
-        else
+        else 
             let sqrZ = Complex.Multiply(currentPointZ, currentPointZ)
             let newPointZ = Complex.Add(sqrZ, originalPointC)
-            CalculateIteration newPointZ originalPointC (currentIteration + 1)
+            // Perform Periodicity Check
+            if previousHashes.Add(newPointZ.GetHashCode()) then
+                CalculateIteration newPointZ originalPointC (currentIteration + 1)
+            else
+                mandelbrotConfig.MaxIterations
 
     let Iteration = CalculateIteration ComplexPoint.Zero complexPoint 0
     let InSet = Iteration = mandelbrotConfig.MaxIterations
@@ -81,12 +87,11 @@ let RenderMandelbrot (mandelbrotConfig:MandelbrotConfig) =
         |> ignore
 
     image
-        
 
 [<EntryPoint>]
 let main argv =
     let fullRange = ComplexRange(new ComplexPoint(-2.5, -1.0), new ComplexPoint(1.0, 1.0))
-    let mandelbrotConfig = new MandelbrotConfig(28000, 16000, fullRange, 1000)
+    let mandelbrotConfig = new MandelbrotConfig(7000, 4000, fullRange, 1000)
 
     printfn "{FullRange: %s}" fullRange.ToString
     printfn "{MandelbrotRenderer: %s, PixelSize: %f}" mandelbrotConfig.ToString mandelbrotConfig.PixelSize
