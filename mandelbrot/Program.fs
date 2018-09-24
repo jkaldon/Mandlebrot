@@ -90,14 +90,40 @@ let RenderMandelbrot (mandelbrotConfig:MandelbrotConfig) =
 
 [<EntryPoint>]
 let main argv =
-    let fullRange = ComplexRange(new ComplexPoint(-2.5, -1.0), new ComplexPoint(1.0, 1.0))
-    let mandelbrotConfig = new MandelbrotConfig(7000, 4000, fullRange, 1000)
+    let range = ComplexRange(new ComplexPoint(-2.5, -1.0), new ComplexPoint(1.0, 1.0))
+    let imageWidth = 7000
+    let imageHeight = 4000
+    let maxIteration = 1000
+    let imageFileName = sprintf "rendered_%ix%i_%i.png" imageWidth imageHeight maxIteration
+    let mandelbrotConfig = new MandelbrotConfig(imageWidth, imageHeight, range, maxIteration)
 
-    printfn "{FullRange: %s}" fullRange.ToString
-    printfn "{MandelbrotRenderer: %s, PixelSize: %f}" mandelbrotConfig.ToString mandelbrotConfig.PixelSize
+    let timer = new System.Diagnostics.Stopwatch()
+    timer.Start()
 
     let image = RenderMandelbrot mandelbrotConfig
-    image.Save(Path.Combine(__SOURCE_DIRECTORY__, "rendered.png"))
+
+    timer.Stop()
+    let seconds = ((float timer.ElapsedMilliseconds)/1000.0)
+
+    let output = (sprintf "MandelbrotRender finished:
+        RenderTime: %fs
+        ImageSize: %i x %i
+        Range: %s
+        MaxIterations: %i
+        ImageName: %s" 
+        seconds imageWidth imageHeight range.ToString maxIteration imageFileName)
+
+    Console.WriteLine(output)
+
+    let g = Graphics.FromImage(image)
+    g.DrawString(output, 
+        SystemFonts.DefaultFont,
+        Brushes.White,
+        0.0f,
+        0.0f,
+        StringFormat.GenericDefault)
+    
+    image.Save(Path.Combine(__SOURCE_DIRECTORY__, imageFileName))
 
     0 // return an integer exit code
 
