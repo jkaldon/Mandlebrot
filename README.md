@@ -11,3 +11,5 @@ MandelbrotRender finished:
         MaxIterations: 1000
         ImageName: rendered_7000x4000_1000.png
 ```
+
+![rendered_7000x4000_1000.png](mandelbrot/rendered_7000x4000_1000.png)
